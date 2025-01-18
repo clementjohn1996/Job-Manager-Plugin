@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Job Manager
- * Description: A simple plugin to create Jobs and Applications tables.
+ * Description: A simple job manager plugin to handle job listings, applications, and related functionalities.
  * Version: 1.0
  * * Author: Clement John
  *  */
