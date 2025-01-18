@@ -1,12 +1,10 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-// Fetch jobs from database or custom post type
-$jobs = get_posts([
-    'post_type' => 'job',
-    'post_status' => 'publish',
-    'numberposts' => -1,
-]);
+// Fetch jobs from wp_jobs table
+global $wpdb;
+$jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
+
 ?>
 
 <div class="wrap">
@@ -17,10 +15,13 @@ $jobs = get_posts([
             <tr>
                 <th>Position Title</th>
                 <th>Company Name</th>
-                <th>Is Featured</th>
                 <th>Job Type</th>
                 <th>Category</th>
+                <th>Location</th>
+                <th>Salary</th>
+                <th>Published</th>
                 <th>Expires</th>
+                <th>Company Logo</th>
                 <th>Applications</th>
             </tr>
         </thead>
@@ -28,17 +29,41 @@ $jobs = get_posts([
             <?php if ( ! empty( $jobs ) ) : ?>
             <?php foreach ( $jobs as $job ) : ?>
             <tr>
-                <td><?php echo esc_html( $job->post_title ); ?></td>
-                <td><?php echo esc_html( get_post_meta( $job->ID, 'expiry_date', true ) ); ?></td>
+                <td><?php echo esc_html( $job->position_title ); ?></td>
+                <td><?php echo esc_html( $job->company_id ); // You can fetch company name if it's a related table ?>
+                </td>
+                <td><?php echo esc_html( $job->job_type ); ?></td>
+                <td><?php echo esc_html( $job->category ); ?></td>
+                <td><?php echo esc_html( $job->job_location ); ?></td>
+                <td><?php echo esc_html( $job->salary ? '$' . number_format( $job->salary, 2 ) : 'N/A' ); ?></td>
+                <td><?php echo esc_html( $job->publish_date ); ?></td>
+                <td><?php echo esc_html( $job->expire_date ); ?></td>
                 <td>
-                    <a href="post.php?post=<?php echo $job->ID; ?>&action=edit">Edit</a> |
-                    <a href="#" onclick="deleteJob(<?php echo $job->ID; ?>)">Delete</a>
+                    <?php if ( $job->company_logo ) : ?>
+                    <img src="<?php echo esc_url( $job->company_logo ); ?>" alt="Company Logo" width="50" height="50" />
+                    <?php else : ?>
+                    No Logo
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <?php
+                        // Assuming applications are stored as comments on each job post (replace with your logic if needed)
+                        $applications = get_comments( [
+                            'post_id' => $job->id,
+                            'status' => 'approve',
+                        ] );
+                        echo count( $applications );
+                        ?>
+                </td>
+                <td>
+                    <a href="post.php?post=<?php echo $job->id; ?>&action=edit">Edit</a> |
+                    <a href="#" onclick="deleteJob(<?php echo $job->id; ?>)">Delete</a>
                 </td>
             </tr>
             <?php endforeach; ?>
             <?php else : ?>
             <tr>
-                <td colspan="3">No jobs found.</td>
+                <td colspan="10">No jobs found.</td>
             </tr>
             <?php endif; ?>
         </tbody>
