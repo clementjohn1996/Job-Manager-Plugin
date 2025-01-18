@@ -1,0 +1,20 @@
+# Ignore test files
+test.php
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore log files and directories
+*.log
+/logs/
+
+# Ignore IDE-specific files
+.idea/
+*.iml
+
+# Ignore vendor folder (if using Composer)
+vendor/
+
+# Ignore node modules (if using npm or yarn)
+node_modules/
