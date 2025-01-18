@@ -1,37 +1,50 @@
 <?php
 /**
  * Class Job_Manager_DB
+ *
+ * Handles database operations for the Job Manager plugin.
  */
 
- 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 class Job_Manager_DB {
 
-    // Create tables on plugin activation
+    /**
+     * Create or update tables on plugin activation.
+     */
     public static function create_tables() {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
 
-        // Create Jobs table
+        // Create or update Jobs table
         $jobs_table = $wpdb->prefix . 'jobs';
         $jobs_sql = "CREATE TABLE $jobs_table (
             id BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            job_title VARCHAR(255) NOT NULL,
+            company_id BIGINT(20) UNSIGNED NOT NULL,  
+            position_title VARCHAR(255) NOT NULL, 
             job_description TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            job_type VARCHAR(50) NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            job_location VARCHAR(100),     
+            publish_date DATE,     
+            expire_date DATE,          
+            company_logo VARCHAR(255), 
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (company_id) REFERENCES {$wpdb->prefix}companies(id) ON DELETE SET NULL
         ) $charset_collate;";
 
-        // Create Applications table
+        // Create or update Applications table
         $applications_table = $wpdb->prefix . 'applications';
         $applications_sql = "CREATE TABLE $applications_table (
             id BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             job_id BIGINT(20) UNSIGNED NOT NULL,
             applicant_name VARCHAR(255) NOT NULL,
             applicant_email VARCHAR(255) NOT NULL,
+            resume_url VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'Pending',
             applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (job_id) REFERENCES $jobs_table(id) ON DELETE CASCADE
         ) $charset_collate;";
@@ -41,15 +54,52 @@ class Job_Manager_DB {
         dbDelta( $jobs_sql );
         dbDelta( $applications_sql );
     }
-    // Delete tables on plugin deactivation
+
+    /**
+     * Delete tables on plugin deactivation.
+     */
     public static function delete_tables() {
         global $wpdb;
 
         $jobs_table = $wpdb->prefix . 'jobs';
         $applications_table = $wpdb->prefix . 'applications';
 
-        // Drop tables if they exist
-        $wpdb->query( "DROP TABLE IF EXISTS $jobs_table" );
         $wpdb->query( "DROP TABLE IF EXISTS $applications_table" );
+        $wpdb->query( "DROP TABLE IF EXISTS $jobs_table" );
+    }
+
+    /**
+     * Insert a job into the jobs table.
+     *
+     * @param array $data Job data to insert.
+     * @return bool True on success, false on failure.
+     */
+    public static function insert_job( $data ) {
+        global $wpdb;
+
+        $jobs_table = $wpdb->prefix . 'jobs';
+
+        // Sanitize and validate input data
+        $insert_data = array(
+            'company_id'      => isset( $data['company_id'] ) ? intval( $data['company_id'] ) : 0,
+            'position_title'  => isset( $data['position_title'] ) ? sanitize_text_field( $data['position_title'] ) : '',
+            'job_description' => isset( $data['job_description'] ) ? wp_kses_post( $data['job_description'] ) : '',
+            'job_type'        => isset( $data['job_type'] ) ? sanitize_text_field( $data['job_type'] ) : '',
+            'category'        => isset( $data['category'] ) ? sanitize_text_field( $data['category'] ) : '',
+            'job_location'    => isset( $data['job_location'] ) ? sanitize_text_field( $data['job_location'] ) : '',
+            'publish_date'    => isset( $data['publish_date'] ) ? sanitize_text_field( $data['publish_date'] ) : '',
+            'expire_date'     => isset( $data['expire_date'] ) ? sanitize_text_field( $data['expire_date'] ) : '',
+            'company_logo'    => isset( $data['company_logo'] ) ? esc_url_raw( $data['company_logo'] ) : '',
+        );
+
+        // Attempt insertion
+        $result = $wpdb->insert( $jobs_table, $insert_data );
+
+        if ( false === $result ) {
+            error_log( 'Job insert failed: ' . $wpdb->last_error );
+            return false;
+        }
+
+        return true;
     }
 }
