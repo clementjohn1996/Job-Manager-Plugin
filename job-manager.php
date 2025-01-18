@@ -51,3 +51,21 @@ function job_manager_load_template($template_name) {
         echo 'Template not found.';
     }
 }
+
+
+// Register the shortcode [display_job_application]
+function register_jobs_shortcode() {
+    add_shortcode( 'display_job_application', 'display_jobs_on_frontend' );
+}
+add_action( 'init', 'register_jobs_shortcode' );
+
+// Function to display jobs on the front end
+function display_jobs_on_frontend() {
+    // Get the template file from the plugin's templates folder
+    ob_start(); // Start output buffering
+
+    // Include the template file
+    include plugin_dir_path(__FILE__) . 'templates/frontend-application-form.php';
+
+    return ob_get_clean(); // Return the buffered content
+}

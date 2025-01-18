@@ -20,7 +20,6 @@ $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
                 <th>Job Type</th>
                 <th>Category</th>
                 <th>Location</th>
-                <th>Salary</th>
                 <th>Published</th>
                 <th>Expires</th>
                 <th>Company Logo</th>

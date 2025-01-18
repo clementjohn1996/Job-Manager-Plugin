@@ -32,9 +32,9 @@ class Job_Manager_DB {
             publish_date DATE,     
             expire_date DATE,          
             company_logo VARCHAR(255), 
-            is_approved TINYINT(1) DEFAULT 0, -- New field
-            is_featured TINYINT(1) DEFAULT 0, -- New field
-            position_taken TINYINT(1) DEFAULT 0, -- New field
+            is_approved TINYINT(1) DEFAULT 0, 
+            is_featured TINYINT(1) DEFAULT 0,
+            position_taken TINYINT(1) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (company_id) REFERENCES {$wpdb->prefix}companies(id) ON DELETE SET NULL
         ) $charset_collate;";
