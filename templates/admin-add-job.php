@@ -1,64 +1,50 @@
 <?php
+// Handle the form submission
 if (isset($_POST['submit_job'])) {
-    // Handle form submission and insert data into the database
-    if (isset($_POST['position_title'], $_POST['job_description'], $_POST['job_type'], $_POST['category'], $_POST['company_name'], $_POST['location'])) {
-        // Collect and sanitize the data
-        $position_title = sanitize_text_field($_POST['position_title']);
-        $job_description = wp_kses_post($_POST['job_description']);
-        $job_type = sanitize_text_field($_POST['job_type']);
-        $category = sanitize_text_field($_POST['category']);
-        $company_name = sanitize_text_field($_POST['company_name']);
-        $location = sanitize_text_field($_POST['location']);
-        $publish_date = isset( $data['publish_date'] ) ? sanitize_text_field( $data['publish_date'] ) : '';
-        $expire_date = isset( $data['expire_date'] ) ? sanitize_text_field( $data['expire_date'] ) : '';
+    // Sanitize form data
+    $company_name = sanitize_text_field($_POST['company_name']);
+    $position_title = sanitize_text_field($_POST['position_title']);
+    $job_description = wp_kses_post($_POST['job_description']);
+    $job_type = sanitize_text_field($_POST['job_type']);
+    $category = sanitize_text_field($_POST['category']);
+    $location = sanitize_text_field($_POST['location']);
+    $publish_date = sanitize_text_field($_POST['publish_date']);
+    $expire_date = sanitize_text_field($_POST['expire_date']);
 
-
-
-        // Handle company logo upload
-        if (isset($_FILES['company_logo']) && !empty($_FILES['company_logo']['name'])) {
-            // Use WordPress media upload function for better handling
-            require_once(ABSPATH . 'wp-admin/includes/image.php');
-            require_once(ABSPATH . 'wp-admin/includes/file.php');
-            require_once(ABSPATH . 'wp-admin/includes/media.php');
-
-            $file = $_FILES['company_logo'];
-            $upload = media_handle_upload('company_logo', 0);
-
-            if (is_wp_error($upload)) {
-                $company_logo = ''; 
-            } else {
-                $company_logo = wp_get_attachment_url($upload);
-            }
+    // Handle logo upload
+    $company_logo = '';
+    if (isset($_FILES['company_logo']) && !empty($_FILES['company_logo']['name'])) {
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        $uploaded_logo = media_handle_upload('company_logo', 0);
+        if (is_wp_error($uploaded_logo)) {
+            $company_logo = '';
         } else {
-            $company_logo = ''; 
+            $company_logo = wp_get_attachment_url($uploaded_logo);
         }
-        
-        $company_id = sanitize_title($company_name) . '-' . time();
+    }
 
-        $job_data = array(
-            'company_id' => $company_id,
-            'job_title' => $position_title,
-            'job_description' => $job_description,
-            'job_type' => $job_type,
-            'category' => $category,
-            'job_location' => $location, 
-            'publish_date' => $publish_date,
-            'expire_date' => $expire_date,
-            'company_logo' => $company_logo,
-        );
+    // Prepare job data for insertion
+    $job_data = array(
+        'company_id'      => 1, // You can replace this with the actual company ID if available
+        'position_title'  => $position_title,
+        'job_description' => $job_description,
+        'job_type'        => $job_type,
+        'category'        => $category,
+        'job_location'    => $location,
+        'publish_date'    => $publish_date,
+        'expire_date'     => $expire_date,
+        'company_logo'    => $company_logo,
+    );
 
-        // Insert the job into the database
-        $inserted = Job_Manager_DB::insert_job($job_data);
-
-        if ($inserted) {
-            echo '<div class="updated"><p>Job added successfully!</p></div>';echo $publish_date;
-        } else {
-            echo '<div class="error"><p>There was an error adding the job. Please try again.</p></div>';
-        }
+    // Insert job data into the database
+    $inserted = Job_Manager_DB::insert_job($job_data);
+    if ($inserted) {
+        echo '<div class="updated"><p>Job successfully published.</p></div>';
+    } else {
+        echo '<div class="error"><p>Failed to publish the job.</p></div>';
     }
 }
 ?>
-
 <div class="wrap">
     <h1>Add New Job</h1>
     <div style="display: flex; justify-content: space-between;">
@@ -138,6 +124,20 @@ if (isset($_POST['submit_job'])) {
                             </select>
                         </td>
                     </tr>
+                    <tr style="display: none;">
+                        <th><label for="publish_date" style="font-weight: 500;">Published</label></th>
+                        <td>
+                            <input type="hidden" id="publish_date" name="publish_date"
+                                value="<?php echo current_time('Y-m-d'); ?>" required />
+                        </td>
+                    </tr>
+                    <tr style="display: none;">
+                        <th><label for="expire_date" style="font-weight: 500;">Expires</label></th>
+                        <td>
+                            <input type="hidden" id="expire_date" name="expire_date"
+                                value="<?php echo current_time('Y-m-d'); ?>" required />
+                        </td>
+                    </tr>
                 </table>
 
                 <p class="submit">
@@ -147,36 +147,35 @@ if (isset($_POST['submit_job'])) {
             </form>
         </div>
 
+
         <!-- Listing Box (small box on the top-right) -->
         <div
             style="width: 30%; background-color: #ffffff; padding: 5px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); height: auto; border: 1px solid #e0e0e0;">
             <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #333;">Listing</h3>
-            <form method="POST" action="" enctype="multipart/form-data">
-                <table class="form-table" style="width: 100%; font-size: 13px; border-spacing: 0 8px;">
-                    <tr>
-                        <th style="text-align: left;"><label for="publish_date"
-                                style="font-weight: 500;">Published</label></th>
-                        <td>
-                            <input type="date" id="publish_date" name="publish_date"
-                                value="<?php echo current_time('Y-m-d'); ?>" required
-                                style="width: calc(60% - 1px); padding: 4px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <th style="text-align: left;"><label for="expire_date" style="font-weight: 500;">Expires</label>
-                        </th>
-                        <td>
-                            <input type="date" id="expire_date" name="expire_date"
-                                value="<?php echo current_time('Y-m-d'); ?>" required
-                                style="width: calc(60% - 1px); padding: 4px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;" />
-                        </td>
-                    </tr>
-                </table>
-                <p class="submit">
-                    <input type="submit" name="submit_job" id="submit_job" class="button button-primary" value="Publish"
-                        style="background-color: #0073aa; color: white;" />
-                </p>
-            </form>
+            <table class="form-table" style="width: 100%; font-size: 13px; border-spacing: 0 8px;">
+                <tr>
+                    <th style="text-align: left;"><label for="publish_date" style="font-weight: 500;">Published</label>
+                    </th>
+                    <td>
+                        <input type="date" id="publish_date_input" name="publish_date_input"
+                            value="<?php echo current_time('Y-m-d'); ?>" required
+                            style="width: calc(60% - 1px); padding: 4px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;" />
+                    </td>
+                </tr>
+                <tr>
+                    <th style="text-align: left;"><label for="expire_date" style="font-weight: 500;">Expires</label>
+                    </th>
+                    <td>
+                        <input type="date" id="expire_date_input" name="expire_date_input"
+                            value="<?php echo current_time('Y-m-d'); ?>" required
+                            style="width: calc(60% - 1px); padding: 4px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;" />
+                    </td>
+                </tr>
+            </table>
+            <p class="submit">
+                <input type="Button" name="status_update" id="status_update" class="button button-primary"
+                    value="Update Status" style="background-color: #0073aa; color: white;" />
+            </p>
         </div>
     </div>
 </div>
@@ -209,6 +208,17 @@ document.addEventListener('DOMContentLoaded', function() {
             logoPreview.style.display = 'none';
             uploadPlaceholder.style.display = 'flex';
         }
+    });
+
+    // Update the hidden fields with the new values and trigger submit
+    document.getElementById('status_update').addEventListener('click', function() {
+        var publishDate = document.getElementById('publish_date_input').value;
+        var expireDate = document.getElementById('expire_date_input').value;
+        document.getElementById('publish_date').value = publishDate;
+        document.getElementById('expire_date').value = expireDate;
+        document.getElementById('submit_job').click();
+        console.log('Updated Publish Date: ' + publishDate);
+        console.log('Updated Expire Date: ' + expireDate);
     });
 });
 </script>
