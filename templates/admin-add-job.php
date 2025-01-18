@@ -10,6 +10,9 @@ if (isset($_POST['submit_job'])) {
     $location = sanitize_text_field($_POST['location']);
     $publish_date = sanitize_text_field($_POST['publish_date']);
     $expire_date = sanitize_text_field($_POST['expire_date']);
+    $is_approved = sanitize_text_field($_POST['is_approved_hidden']);
+    $is_featured = sanitize_text_field($_POST['is_featured_hidden']);
+    $position_taken = sanitize_text_field($_POST['position_taken_hidden']);
 
     // Handle logo upload
     $company_logo = '';
@@ -22,10 +25,12 @@ if (isset($_POST['submit_job'])) {
             $company_logo = wp_get_attachment_url($uploaded_logo);
         }
     }
+    $timestamp = time(); 
+    $company_id = strtolower(sanitize_title_with_dashes($company_name)) . '-' . $timestamp;
 
     // Prepare job data for insertion
     $job_data = array(
-        'company_id'      => 1, // You can replace this with the actual company ID if available
+        'company_id'      =>  $company_id,
         'position_title'  => $position_title,
         'job_description' => $job_description,
         'job_type'        => $job_type,
@@ -34,6 +39,9 @@ if (isset($_POST['submit_job'])) {
         'publish_date'    => $publish_date,
         'expire_date'     => $expire_date,
         'company_logo'    => $company_logo,
+        'is_approved'     => sanitize_text_field($_POST['is_approved_hidden']),
+        'is_featured'     => sanitize_text_field($_POST['is_featured_hidden']),
+        'position_taken'  => sanitize_text_field($_POST['position_taken_hidden']),
     );
 
     // Insert job data into the database
@@ -138,6 +146,10 @@ if (isset($_POST['submit_job'])) {
                                 value="<?php echo current_time('Y-m-d'); ?>" required />
                         </td>
                     </tr>
+
+                    <input type="hidden" id="is_approved_hidden" name="is_approved_hidden" value="false" />
+                    <input type="hidden" id="is_featured_hidden" name="is_featured_hidden" value="false" />
+                    <input type="hidden" id="position_taken_hidden" name="position_taken_hidden" value="false" />
                 </table>
 
                 <p class="submit">
@@ -170,6 +182,24 @@ if (isset($_POST['submit_job'])) {
                             value="<?php echo current_time('Y-m-d'); ?>" required
                             style="width: calc(60% - 1px); padding: 4px 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px;" />
                     </td>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="is_approved" name="is_approved"
+                            style="width: 16px; height: 16px; margin-right: 10px;" /></td>
+                    <th style="text-align: left;"><label for="is_approved" style="font-weight: 500;">Approved</label>
+                    </th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="is_featured" name="is_featured"
+                            style="width: 16px; height: 16px; margin-right: 10px;" /></td>
+                    <th style="text-align: left;"><label for="is_featured" style="font-weight: 500;">Featured</label>
+                    </th>
+                </tr>
+                <tr>
+                    <td><input type="checkbox" id="position_taken" name="position_taken"
+                            style="width: 16px; height: 16px; margin-right: 10px;" /></td>
+                    <th style="text-align: left;"><label for="position_taken" style="font-weight: 500;">Position
+                            Taken</label></th>
                 </tr>
             </table>
             <p class="submit">
@@ -214,11 +244,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('status_update').addEventListener('click', function() {
         var publishDate = document.getElementById('publish_date_input').value;
         var expireDate = document.getElementById('expire_date_input').value;
+        var isApproved = document.getElementById('is_approved').checked ? '1' : '0';
+        var isFeatured = document.getElementById('is_featured').checked ? '1' : '0';
+        var positionTaken = document.getElementById('position_taken').checked ? '1' : '0';
         document.getElementById('publish_date').value = publishDate;
         document.getElementById('expire_date').value = expireDate;
+        document.getElementById('is_approved_hidden').value = isApproved;
+        document.getElementById('is_featured_hidden').value = isFeatured;
+        document.getElementById('position_taken_hidden').value = positionTaken;
         document.getElementById('submit_job').click();
         console.log('Updated Publish Date: ' + publishDate);
         console.log('Updated Expire Date: ' + expireDate);
+        console.log('Updated Approved Status: ' + isApproved);
+        console.log('Updated Featured Status: ' + isFeatured);
+        console.log('Updated Position Taken Status: ' + positionTaken);
     });
 });
 </script>

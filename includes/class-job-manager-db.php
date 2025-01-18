@@ -32,6 +32,9 @@ class Job_Manager_DB {
             publish_date DATE,     
             expire_date DATE,          
             company_logo VARCHAR(255), 
+            is_approved TINYINT(1) DEFAULT 0, -- New field
+            is_featured TINYINT(1) DEFAULT 0, -- New field
+            position_taken TINYINT(1) DEFAULT 0, -- New field
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (company_id) REFERENCES {$wpdb->prefix}companies(id) ON DELETE SET NULL
         ) $charset_collate;";
@@ -90,6 +93,9 @@ class Job_Manager_DB {
             'publish_date'    => isset( $data['publish_date'] ) ? sanitize_text_field( $data['publish_date'] ) : '',
             'expire_date'     => isset( $data['expire_date'] ) ? sanitize_text_field( $data['expire_date'] ) : '',
             'company_logo'    => isset( $data['company_logo'] ) ? esc_url_raw( $data['company_logo'] ) : '',
+            'is_approved'     => isset( $data['is_approved'] ) ? intval( $data['is_approved'] ) : 0, // New field
+            'is_featured'     => isset( $data['is_featured'] ) ? intval( $data['is_featured'] ) : 0, // New field
+            'position_taken'  => isset( $data['position_taken'] ) ? intval( $data['position_taken'] ) : 0, // New field
         );
 
         // Attempt insertion

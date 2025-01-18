@@ -13,8 +13,10 @@ $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
     <table class="wp-list-table widefat fixed striped">
         <thead>
             <tr>
+                <td><input type="checkbox" id="select-all" name="select-all"
+                        style="width: 16px; height: 16px; margin-right: 10px;" /></td>
                 <th>Position Title</th>
-                <th>Company Name</th>
+                <th>Is Featured</th>
                 <th>Job Type</th>
                 <th>Category</th>
                 <th>Location</th>
@@ -29,13 +31,15 @@ $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
             <?php if ( ! empty( $jobs ) ) : ?>
             <?php foreach ( $jobs as $job ) : ?>
             <tr>
+                <td><input type="checkbox" class="job-checkbox"
+                        style="width: 16px; height: 16px; margin-right: 10px;" /></td>
                 <td><?php echo esc_html( $job->position_title ); ?></td>
-                <td><?php echo esc_html( $job->company_id ); // You can fetch company name if it's a related table ?>
+                <td>
+                    <?php echo ( $job->is_featured ) ? '✓' : '✗'; ?>
                 </td>
                 <td><?php echo esc_html( $job->job_type ); ?></td>
                 <td><?php echo esc_html( $job->category ); ?></td>
                 <td><?php echo esc_html( $job->job_location ); ?></td>
-                <td><?php echo esc_html( $job->salary ? '$' . number_format( $job->salary, 2 ) : 'N/A' ); ?></td>
                 <td><?php echo esc_html( $job->publish_date ); ?></td>
                 <td><?php echo esc_html( $job->expire_date ); ?></td>
                 <td>
@@ -53,7 +57,7 @@ $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
                             'status' => 'approve',
                         ] );
                         echo count( $applications );
-                        ?>
+                    ?>
                 </td>
                 <td>
                     <a href="post.php?post=<?php echo $job->id; ?>&action=edit">Edit</a> |
@@ -71,6 +75,13 @@ $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs");
 </div>
 
 <script>
+document.getElementById('select-all').addEventListener('click', function() {
+    var checkboxes = document.querySelectorAll('.job-checkbox');
+    checkboxes.forEach(function(checkbox) {
+        checkbox.checked = document.getElementById('select-all').checked;
+    });
+});
+
 function deleteJob(jobId) {
     if (confirm('Are you sure you want to delete this job?')) {
         // Add AJAX call for deletion
