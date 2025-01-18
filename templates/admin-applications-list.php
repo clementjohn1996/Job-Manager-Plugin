@@ -54,7 +54,6 @@ $dates = $wpdb->get_results("SELECT DISTINCT DATE(submitted_at) as date FROM {$w
                 });
                 </script>
 
-
                 <th>Message</th>
             </tr>
         </thead>

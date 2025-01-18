@@ -34,6 +34,7 @@ function job_manager_dashboard() {
 function job_manager_add_new_job() {
     job_manager_load_template('admin-add-job'); 
 }
+
 // Applications Page
 function job_manager_applications() {
     job_manager_load_template('admin-applications-list'); 

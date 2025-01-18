@@ -3,6 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 global $wpdb;
 
+
 // Fetch jobs
 $jobs = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}jobs ORDER BY publish_date DESC");
 

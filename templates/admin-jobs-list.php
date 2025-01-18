@@ -7,7 +7,6 @@ $jobs = get_posts([
     'post_status' => 'publish',
     'numberposts' => -1,
 ]);
-
 ?>
 
 <div class="wrap">

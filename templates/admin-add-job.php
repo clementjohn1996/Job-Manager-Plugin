@@ -1,6 +1,5 @@
 <div class="wrap">
     <h1>Add New Job</h1>
-
     <div style="display: flex; justify-content: space-between;">
         <div style="width: 60%;">
 

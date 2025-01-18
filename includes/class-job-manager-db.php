@@ -3,6 +3,7 @@
  * Class Job_Manager_DB
  */
 
+ 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -40,7 +41,6 @@ class Job_Manager_DB {
         dbDelta( $jobs_sql );
         dbDelta( $applications_sql );
     }
-
     // Delete tables on plugin deactivation
     public static function delete_tables() {
         global $wpdb;
