@@ -69,9 +69,9 @@ $dates = $wpdb->get_results("SELECT DISTINCT DATE(submitted_at) as date FROM {$w
             ?>
             <tr>
                 <td><?php echo esc_html( $app->applicant_name ); ?></td>
-                <td><?php echo esc_html( $app->email ); ?></td>
+                <td><?php echo esc_html( $app->applicant_email ); ?></td>
                 <td><?php echo esc_html( get_the_title( $app->job_id ) ); ?></td>
-                <td><?php echo esc_html( $app->submitted_at ); ?></td>
+                <td><?php echo esc_html( $app->status ); ?></td> <!-- Display Status -->
                 <td>
                     <a href="admin.php?page=application-details&id=<?php echo $app->id; ?>">View</a>
                 </td>

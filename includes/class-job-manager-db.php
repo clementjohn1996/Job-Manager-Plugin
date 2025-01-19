@@ -16,7 +16,8 @@ class Job_Manager_DB {
      */
     public static function create_tables() {
         global $wpdb;
-
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}jobs");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}applications");
         $charset_collate = $wpdb->get_charset_collate();
 
         // Create or update Jobs table
@@ -43,19 +44,21 @@ class Job_Manager_DB {
         $applications_table = $wpdb->prefix . 'applications';
         $applications_sql = "CREATE TABLE $applications_table (
             id BIGINT(20) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            job_id BIGINT(20) UNSIGNED NOT NULL,
+            job_id BIGINT(20) UNSIGNED,
             applicant_name VARCHAR(255) NOT NULL,
             applicant_email VARCHAR(255) NOT NULL,
-            resume_url VARCHAR(255),
+            applicant_message TEXT,
+            attached_file VARCHAR(255),
             status VARCHAR(50) DEFAULT 'Pending',
-            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (job_id) REFERENCES $jobs_table(id) ON DELETE CASCADE
+            FOREIGN KEY (job_id) REFERENCES {$wpdb->prefix}jobs(id) ON DELETE CASCADE
         ) $charset_collate;";
 
         // Execute the queries
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $jobs_sql );
-        dbDelta( $applications_sql );
+        dbDelta( $applications_sql ); 
+        echo $wpdb->last_error;  
+        $wpdb->print_error();     
     }
 
     /**
@@ -108,4 +111,35 @@ class Job_Manager_DB {
 
         return true;
     }
-}
+ /**
+ * Insert an application into the applications table.
+ *
+ * @param array $data Application data to insert.
+ * @return bool True on success, false on failure.
+ */
+public static function insert_application($data) {
+    global $wpdb;
+
+    $applications_table = $wpdb->prefix . 'applications';
+
+    // Sanitize and validate input data
+    $insert_data = array(
+        'job_id' => isset($data['job_id']) ? intval($data['job_id']) : 0,
+        'applicant_name' => isset($data['applicant_name']) ? sanitize_text_field($data['applicant_name']) : '',
+        'applicant_email' => isset($data['applicant_email']) ? sanitize_email($data['applicant_email']) : '',
+        'applicant_message'=> isset($data['applicant_message']) ? sanitize_email($data['applicant_message']) : '',
+        'file_url' => isset($data['file_url']) ? esc_url_raw($data['file_url']) : '',
+        'status' => isset($data['status']) ? sanitize_text_field($data['status']) : 'Pending',
+    );
+
+    // Attempt insertion
+    $result = $wpdb->insert($applications_table, $insert_data);
+
+    if (false === $result) {
+        error_log('Application insert failed: ' . $wpdb->last_error);
+        return false;
+    }
+
+    return true;
+}}
+?>
