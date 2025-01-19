@@ -35,9 +35,16 @@ function job_manager_add_new_job() {
     job_manager_load_template('admin-add-job'); 
 }
 
-// Applications Page
+// Applications Page (Modified to load either listing or single view)
 function job_manager_applications() {
-    job_manager_load_template('admin-applications-list'); 
+    // Check if the 'view' query parameter is set to 'application-details'
+    if ( isset( $_GET['view'] ) && $_GET['view'] == 'application-details' && isset( $_GET['id'] ) ) {
+        // Show the single application view template
+        job_manager_load_template('single-application-details');
+    } else {
+        // Default: Show the applications list template
+        job_manager_load_template('admin-applications-list'); 
+    }
 }
 
 // Load the correct template
@@ -51,7 +58,6 @@ function job_manager_load_template($template_name) {
         echo 'Template not found.';
     }
 }
-
 
 // Register the shortcode [display_job_application]
 function register_jobs_shortcode() {
