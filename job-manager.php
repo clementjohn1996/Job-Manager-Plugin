@@ -73,5 +73,56 @@ function display_jobs_on_frontend() {
     // Include the template file
     include plugin_dir_path(__FILE__) . 'templates/frontend-application-form.php';
 
-    return ob_get_clean(); // Return the buffered content
+    return ob_get_clean(); 
+}
+// REST API 
+function register_job_application_api() {
+    register_rest_route('job-portal/v1', '/apply', [
+        'methods' => 'POST',
+        'callback' => 'handle_job_application',
+        'permission_callback' => '__return_true',
+    ]);
+
+    // Temporarily flush rewrite rules for debugging
+    flush_rewrite_rules();
+}
+add_action('rest_api_init', 'register_job_application_api');
+
+
+
+// Handle the job application
+function handle_job_application(WP_REST_Request $request) {
+    $applicant_name = sanitize_text_field($request->get_param('applicant_name'));
+    $applicant_email = sanitize_email($request->get_param('applicant_email'));
+    $applicant_message = sanitize_textarea_field($request->get_param('applicant_message'));
+    $job_id = sanitize_text_field($request->get_param('job_id'));
+    $attached_file = $request->get_file_params();
+
+    if (empty($applicant_name) || empty($applicant_email) || empty($job_id)) {
+        return new WP_REST_Response('Missing required fields', 400);
+    }
+
+    if (!empty($attached_file)) {
+        $upload = wp_upload_bits($attached_file['attached_file']['name'], null, file_get_contents($attached_file['attached_file']['tmp_name']));
+        if (!$upload['error']) {
+            $file_url = $upload['url'];
+        } else {
+            return new WP_REST_Response('File upload failed', 500);
+        }
+    }
+
+    global $wpdb;
+    $wpdb->insert(
+        $wpdb->prefix . 'applications',
+        [
+            'job_id' => $job_id,
+            'applicant_name' => $applicant_name,
+            'applicant_email' => $applicant_email,
+            'applicant_message' => $applicant_message,
+            'attached_file' => $file_url ?? '',
+            'status' => 'Pending',
+            'submitted_at' => current_time('mysql'),
+        ]
+    );
+    return new WP_REST_Response('Application submitted successfully', 200);
 }
