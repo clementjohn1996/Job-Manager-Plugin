@@ -111,35 +111,44 @@ class Job_Manager_DB {
 
         return true;
     }
- /**
- * Insert an application into the applications table.
- *
- * @param array $data Application data to insert.
- * @return bool True on success, false on failure.
- */
-public static function insert_application($data) {
-    global $wpdb;
 
-    $applications_table = $wpdb->prefix . 'applications';
+    /**
+     * Insert an application into the applications table.
+     *
+     * @param array $data Application data to insert.
+     * @return bool True on success, false on failure.
+     */
+    public static function insert_application($data) {
+        global $wpdb;
 
-    // Sanitize and validate input data
-    $insert_data = array(
-        'job_id' => isset($data['job_id']) ? intval($data['job_id']) : 0,
-        'applicant_name' => isset($data['applicant_name']) ? sanitize_text_field($data['applicant_name']) : '',
-        'applicant_email' => isset($data['applicant_email']) ? sanitize_email($data['applicant_email']) : '',
-        'applicant_message'=> isset($data['applicant_message']) ? sanitize_email($data['applicant_message']) : '',
-        'file_url' => isset($data['file_url']) ? esc_url_raw($data['file_url']) : '',
-        'status' => isset($data['status']) ? sanitize_text_field($data['status']) : 'Pending',
-    );
+        // Check if the job exists before inserting the application
+        $job_exists = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}jobs WHERE id = %d", $data['job_id'] ) );
+        if ( !$job_exists ) {
+            error_log('Invalid Job ID: ' . $data['job_id']);
+            return false;
+        }
 
-    // Attempt insertion
-    $result = $wpdb->insert($applications_table, $insert_data);
+        $applications_table = $wpdb->prefix . 'applications';
 
-    if (false === $result) {
-        error_log('Application insert failed: ' . $wpdb->last_error);
-        return false;
+        // Sanitize and validate input data
+        $insert_data = array(
+            'job_id' => isset($data['job_id']) ? intval($data['job_id']) : 0,
+            'applicant_name' => isset($data['applicant_name']) ? sanitize_text_field($data['applicant_name']) : '',
+            'applicant_email' => isset($data['applicant_email']) ? sanitize_email($data['applicant_email']) : '',
+            'applicant_message'=> isset($data['applicant_message']) ? sanitize_textarea_field($data['applicant_message']) : '', // Correct sanitization
+            'attached_file' => isset($data['attached_file']) ? esc_url_raw($data['attached_file']) : '', // Use 'attached_file' instead of 'file_url'
+            'status' => isset($data['status']) ? sanitize_text_field($data['status']) : 'Pending',
+        );
+
+        // Attempt insertion
+        $result = $wpdb->insert($applications_table, $insert_data);
+
+        if (false === $result) {
+            error_log('Application insert failed: ' . $wpdb->last_error);
+            return false;
+        }
+
+        return true;
     }
-
-    return true;
-}}
+}
 ?>
